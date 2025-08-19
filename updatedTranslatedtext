@@ -1,0 +1,39 @@
+// components/TranslatedText.js
+import React, { useEffect, useState } from "react";
+import { Text } from "react-native";
+import { useLanguage } from "../contexts/LanguageContext";
+
+const TranslatedText = ({ children, style }) => {
+  const { translateText, lang } = useLanguage();
+  const [translated, setTranslated] = useState(children);
+
+  useEffect(() => {
+    let mounted = true;
+
+    if (!children) return;
+
+    // Debug logs to make sure effect runs
+    console.log("TranslatedText effect triggered:", children, "Lang:", lang);
+
+    // Wrap async in IIFE
+    (async () => {
+      try {
+        const res = await translateText(children);
+        if (mounted) {
+          setTranslated(res);
+          console.log("TranslatedText result:", res);
+        }
+      } catch (err) {
+        console.warn("Translation error:", err);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [children, lang, translateText]);
+
+  return <Text style={style}>{translated}</Text>;
+};
+
+export default TranslatedText;
