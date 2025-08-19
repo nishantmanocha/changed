@@ -1,0 +1,123 @@
+import React, { useState } from "react";
+import { Slot } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import { useFrameworkReady } from "../hooks/useFrameworkReady";
+import { ThemeProvider } from "../contexts/ThemeContext";
+import { Provider } from "react-redux";
+import { AuthProvider } from "../contexts/AuthContext";
+import store from "../redux/store";
+import Toast from "react-native-toast-message";
+import { useLanguage } from "../contexts/LanguageContext";
+
+import {
+  SecurityProvider,
+  SecurityStatusIndicator,
+} from "../components/SecurityProvider";
+
+function MainLayout() {
+  useFrameworkReady();
+
+  // Language Switcher component
+  const LanguageSwitcher = () => {
+    const { setLang } = useLanguage();
+    const [selected, setSelected] = useState("en");
+
+    const handleSwitch = (lang: string) => {
+      setSelected(lang);
+      setLang(lang);
+    };
+
+    return (
+      <View style={styles.switcherContainer}>
+        {[
+          { code: "en", label: "EN" },
+          { code: "hi", label: "हि" },
+          { code: "pa", label: "ਪੰ" },
+        ].map((lang) => (
+          <TouchableOpacity
+            key={lang.code}
+            style={[
+              styles.switchButton,
+              selected === lang.code && styles.activeButton,
+            ]}
+            onPress={() => handleSwitch(lang.code)}
+          >
+            <Text
+              style={[
+                styles.switchText,
+                selected === lang.code && styles.activeText,
+              ]}
+            >
+              {lang.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  return (
+    <SecurityProvider>
+      <ThemeProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <AuthProvider>
+            {/* Top-right language switcher */}
+            <View style={styles.topRight}>
+              <LanguageSwitcher />
+            </View>
+
+            <Slot />
+
+            <StatusBar style="light" backgroundColor="#1a1a2e" />
+            <SecurityStatusIndicator />
+            <Toast position="top" visibilityTime={3000} />
+          </AuthProvider>
+        </GestureHandlerRootView>
+      </ThemeProvider>
+    </SecurityProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <Provider store={store}>
+      <MainLayout />
+    </Provider>
+  );
+}
+
+// Styles
+const styles = StyleSheet.create({
+  topRight: {
+    position: "absolute",
+    top: 40,
+    right: 16,
+    zIndex: 1000,
+    flexDirection: "row",
+  },
+  switcherContainer: {
+    flexDirection: "row",
+    backgroundColor: "#1a1a2e",
+    borderRadius: 8,
+    padding: 4,
+  },
+  switchButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginHorizontal: 2,
+  },
+  activeButton: {
+    backgroundColor: "#ff6b6b",
+  },
+  switchText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  activeText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+});
